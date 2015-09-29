@@ -1,0 +1,20 @@
+{
+  "sns-topic": "foo",
+  "servers": {
+    "example.com": {
+      "Apt": {},
+      "Composer": {
+        "paths": [ "/path/to/composer/project" ]
+      },
+      "Drupal": {
+        "sites": [ "drupal1.example.com", "drupal2.example.com" ],
+        "drupal2.example.com" : {
+          "ignore": [ "zeropoint" ]
+        }
+      },
+      "Npm": {
+        "paths": [ "/path/to/npm/project" ]
+      }
+    }
+  }
+}
