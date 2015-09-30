@@ -55,7 +55,7 @@ class Drupal(BaseApp):
       for line in output.splitlines() :
         update = line.rstrip().split(',')
         if not re.match('^Failed', update[0]) and update[3] != 'Unknown':
-          if not site in self.options and not 'ignores' in self.options[site] and not update[0] in self.options[site]['ignores']:
+          if not update[0] in self.options.get(site, {}).get('ignore', []):
             results.append([site, update[1], update[2], update[0] + ' (' + update[3].replace(' available','') + ')'])
     return results
 
