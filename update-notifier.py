@@ -40,6 +40,8 @@ class Npm(BaseApp):
         versions = line.split(':')
         old = versions[-2].split('@')
         new = versions[-3].split('@')
+        if old == new : # A new version of the module exists, but we have the version we want
+          continue
         module = versions[0].split('/').pop()
         results.append([path, old[1], new[1], module])
     return results
