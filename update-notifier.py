@@ -68,7 +68,7 @@ class Composer(BaseApp):
     for path in self.options['paths'] :
       output = self._run(['composer.phar', '--no-ansi', '--working-dir=' + path, 'update', '--dry-run'])
       for line in output.splitlines() :
-        match = re.match('^\s+- Updating ([^\s]+) \(([^\)]+)\) to ([^\s]+) \(([^\)]+)\)', output)
+        match = re.match('^\s+- Updating ([^\s]+) \(([^\)]+)\) to ([^\s]+) \(([^\)]+)\)', line)
         if match :
           results.append([path, match.group(2), match.group(4), match.group(1)])
     return results
