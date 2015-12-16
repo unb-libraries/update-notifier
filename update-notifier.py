@@ -53,10 +53,10 @@ class Drupal(BaseApp):
     for site in self.options['sites'] :
       run_opts = ['drush', '--root=' + '/var/www/' + site + '/htdocs/', '--uri=http://default']
       self._run(run_opts + ['sql-query', '"DELETE FROM cache_update"'])
-      output = self._run(run_opts + ['ups', '--format=csv', '--pipe'])
+      output = self._run(run_opts + ['ups', '--update-backend=drupal', '--format=csv', '--pipe'])
       for line in output.splitlines() :
         update = line.rstrip().split(',')
-        if len(update) > 1 and not re.match('^Failed', update[0]) and update[3] != 'Unknown':
+        if len(update) > 1 and not re.match('^Failed', update[0]) and not re.match('^(Unknown|Unable to check status)', update[3]):
           if not update[0] in self.options.get(site, {}).get('ignore', []):
             results.append([site, update[1], update[2], update[0] + ' (' + update[3].replace(' available','') + ')'])
     return results
