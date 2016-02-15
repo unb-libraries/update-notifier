@@ -14,13 +14,13 @@ class BaseApp:
 
   def _run(self, args):
     ssh = ['ssh', self.host] + args
-    output = subprocess.check_output(ssh, stderr=subprocess.STDOUT)
+    output = subprocess.check_output(ssh)
     return output
 
 class Apt(BaseApp):
 
   def run_command(self):
-    output = self._run(['/usr/lib/update-notifier/apt-check'])
+    output = self._run(['/usr/lib/update-notifier/apt-check', '2>&1'])
     if output == '0;0' :
       return []
 
@@ -53,7 +53,7 @@ class Drupal(BaseApp):
     for site in self.options['sites'] :
       run_opts = ['drush', '--root=' + '/var/www/' + site + '/htdocs/', '--uri=http://default']
       self._run(run_opts + ['sql-query', '"DELETE FROM cache_update"'])
-      output = self._run(run_opts + ['ups', '--update-backend=drupal', '--format=csv', '--pipe'])
+      output = self._run(run_opts + ['ups', '--update-backend=drupal', '--format=csv', '--pipe', '2>/dev/null'])
       for line in output.splitlines() :
         update = line.rstrip().split(',')
         if len(update) > 1 and not re.match('^Failed', update[0]) and not re.match('^(Unknown|Unable to check status)', update[3]):
@@ -66,7 +66,7 @@ class Composer(BaseApp):
   def run_command(self):
     results = []
     for path in self.options['paths'] :
-      output = self._run(['composer.phar', '--no-ansi', '--working-dir=' + path, 'update', '--dry-run'])
+      output = self._run(['composer.phar', '--no-ansi', '--working-dir=' + path, 'update', '--dry-run', '2>&1'])
       for line in output.splitlines() :
         match = re.match('^\s+- Updating ([^\s]+) \(([^\)]+)\) to ([^\s]+) \(([^\)]+)\)', line)
         if match :
