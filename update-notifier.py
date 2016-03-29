@@ -52,7 +52,8 @@ class Drupal(BaseApp):
     results = []
     for site in self.options['sites'] :
       run_opts = ['drush', '--root=' + '/var/www/' + site + '/htdocs/', '--uri=http://default']
-      self._run(run_opts + ['sql-query', '"DELETE FROM cache_update"'])
+      clear_cache = ['cache-rebuild'] if self.options.get(site,{}).get('version', '') == '8' else ['cc', 'all'];
+      self._run(run_opts + clear_cache + ['--pipe', '2>/dev/null'])
       output = self._run(run_opts + ['ups', '--update-backend=drupal', '--format=csv', '--pipe', '2>/dev/null'])
       for line in output.splitlines() :
         update = line.rstrip().split(',')
