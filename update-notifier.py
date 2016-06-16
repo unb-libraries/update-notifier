@@ -74,6 +74,18 @@ class Composer(BaseApp):
           results.append([path, match.group(2), match.group(4), match.group(1)])
     return results
 
+class Pip(BaseApp):
+
+  def run_command(self):
+    results = []
+    for path in self.options['paths'] :
+      output = self._run(['cd', path, '&&', 'pur', '-o', '/dev/null'])
+      for line in output.splitlines() :
+        match = re.match('Updated ([^:]+): ([^\s]+) -> ([^\s]+)', line)
+        if match :
+          results.append([path, match.group(2), match.group(3), match.group(1)])
+    return results
+
 class UpdateNotifier:
 
   def __init__(self, config_file):
