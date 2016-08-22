@@ -12,7 +12,7 @@ class BaseApp:
     self.host = host
     self.options = opts
 
-  def _run(self, args):
+  def _run_ssh(self, args):
     ssh = ['ssh', self.host] + args
     output = subprocess.check_output(ssh)
     return output
@@ -20,7 +20,7 @@ class BaseApp:
 class Apt(BaseApp):
 
   def run_command(self):
-    output = self._run(['/usr/lib/update-notifier/apt-check', '2>&1'])
+    output = self._run_ssh(['/usr/lib/update-notifier/apt-check', '2>&1'])
     if output == '0;0' :
       return []
 
@@ -35,7 +35,7 @@ class Npm(BaseApp):
   def run_command(self):
     results = []
     for path in self.options['paths'] :
-      output = self._run(['cd', path, '&&', 'npm', 'outdated', '--depth=0', '--parseable'])
+      output = self._run_ssh(['cd', path, '&&', 'npm', 'outdated', '--depth=0', '--parseable'])
       for line in output.splitlines() :
         versions = line.split(':')
         old = versions[-2].split('@')
@@ -53,8 +53,8 @@ class Drupal(BaseApp):
     for site in self.options['sites'] :
       run_opts = ['drush', '--root=' + '/var/www/' + site + '/htdocs/', '--uri=http://default']
       clear_cache = ['cache-rebuild'] if self.options.get(site,{}).get('version', '') == '8' else ['cc', 'all'];
-      self._run(run_opts + clear_cache + ['--pipe', '2>/dev/null'])
-      output = self._run(run_opts + ['ups', '--update-backend=drupal', '--format=csv', '--pipe', '2>/dev/null'])
+      self._run_ssh(run_opts + clear_cache + ['--pipe', '2>/dev/null'])
+      output = self._run_ssh(run_opts + ['ups', '--update-backend=drupal', '--format=csv', '--pipe', '2>/dev/null'])
       for line in output.splitlines() :
         update = line.rstrip().split(',')
         if len(update) > 1 and not re.match('^Failed', update[0]) and not re.match('^(Unknown|Unable to check status)', update[3]):
@@ -67,7 +67,7 @@ class Composer(BaseApp):
   def run_command(self):
     results = []
     for path in self.options['paths'] :
-      output = self._run(['composer.phar', '--no-ansi', '--working-dir=' + path, 'update', '--dry-run', '2>&1'])
+      output = self._run_ssh(['composer.phar', '--no-ansi', '--working-dir=' + path, 'update', '--dry-run', '2>&1'])
       for line in output.splitlines() :
         match = re.match('^\s+- Updating ([^\s]+) \(([^\)]+)\) to ([^\s]+) \(([^\)]+)\)', line)
         if match :
@@ -79,7 +79,7 @@ class Pip(BaseApp):
   def run_command(self):
     results = []
     for path in self.options['paths'] :
-      output = self._run(['cd', path, '&&', 'pur', '-o', '/dev/null'])
+      output = self._run_ssh(['cd', path, '&&', 'pur', '-o', '/dev/null'])
       for line in output.splitlines() :
         match = re.match('Updated ([^:]+): ([^\s]+) -> ([^\s]+)', line)
         if match :
