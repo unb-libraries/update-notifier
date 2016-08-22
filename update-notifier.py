@@ -46,6 +46,23 @@ class Npm(BaseApp):
         results.append([path, old[1], new[1], module])
     return results
 
+class DrupalDocker(BaseApp):
+
+  def run_command(self):
+    results = []
+
+    # eventually use tag to find drupal containers
+    output = self._run_ssh(['sudo', 'docker', 'ps', '--format "{{.ID}} {{.Names}}"', '-f label=ca.unb.lib.generator=drupal8']);
+    for line in output.splitlines() :
+      cols = line.split()
+      updates = self._run_ssh(['sudo', 'docker', 'exec', cols[0], 'drush', 'ups', '--root=/app/html', '--update-backend=drupal', '--format=csv', '--pipe', '2>/dev/null'])
+      for update_line in updates.splitlines() :
+        update = update_line.rstrip().split(',')
+        if len(update) > 1 and not re.match('^Failed', update[0]) and not re.match('^(Unknown|Unable to check status)', update[3]):
+          results.append([cols[1], update[1], update[2], update[0] + ' (' + update[3].replace(' available','') + ')'])
+
+    return results
+
 class Drupal(BaseApp):
 
   def run_command(self):
