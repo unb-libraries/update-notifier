@@ -51,7 +51,6 @@ class DrupalDocker(BaseApp):
   def run_command(self):
     results = []
 
-    # eventually use tag to find drupal containers
     output = self._run_ssh(['sudo', 'docker', 'ps', '--format "{{.ID}} {{.Names}}"', '-f label=ca.unb.lib.generator=drupal8']);
     for line in output.splitlines() :
       cols = line.split()
