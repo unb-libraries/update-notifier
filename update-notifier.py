@@ -115,12 +115,14 @@ class UpdateNotifier:
       message = table.get_string()
     subprocess.call([ec2_sns_sender_binpath, '-t', self.config['sns-topic'], '-s', subject, '-m', message], stdout=DEVNULL, stderr=DEVNULL)
 
-  def get_updates(self):
+  def get_updates(self, hosts):
     table = PrettyTable(["Hostname","Type","Project","Old","New","Notes"])
     table.padding_width = 1
     table.align = "l"
 
     for host, apps in sorted(self.config['servers'].items()) :
+      if hosts != None and host not in hosts:
+        continue
       for app_type, opts in sorted(apps.items()) :
         constructor = globals()[app_type]
         app = constructor(host, opts)
@@ -134,10 +136,11 @@ class UpdateNotifier:
 def main():
   parser = OptionParser()
   parser.add_option('-p', '--print', dest = 'print_only', help = 'Just print the results, no SNS message.', default = False, action = 'store_true')
+  parser.add_option('--host', dest = 'host', help = 'Check for updates on this host only (can be specified multiple times)', action = 'append')
   (options, args) = parser.parse_args()
 
   notifier = UpdateNotifier(args[0])
-  table = notifier.get_updates()
+  table = notifier.get_updates(hosts=options.host)
 
   if options.print_only:
     print table
