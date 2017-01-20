@@ -54,6 +54,12 @@ class DrupalDocker(BaseApp):
     output = self._run_ssh(['sudo', 'docker', 'ps', '--format "{{.ID}} {{.Names}}"', '-f label=ca.unb.lib.generator=drupal8']);
     for line in output.splitlines() :
       cols = line.split()
+      # Check for newrelic updates
+      nr_ver_line = self._run_ssh(['sudo', 'docker', 'exec', cols[0], 'newrelic-daemon', '--version']).splitlines()[0]
+      nr_ver_string = re.search('\d+.\d+.\d+.\d+', nr_ver_line).group()
+      nr_res_code = subprocess.check_output(['curl', '-s', '-o', '/dev/null', '-I', '-w', '%{http_code}', 'https://download.newrelic.com/php_agent/release/newrelic-php5-' + nr_ver_string + '-linux.tar.gz'])
+      if nr_res_code == '404':
+        results.append([cols[1], nr_ver_string, '', 'NEWRELIC_PHP_VERSION'])
       updates = self._run_ssh(['sudo', 'docker', 'exec', cols[0], 'drush', 'ups', '--root=/app/html', '--update-backend=drupal', '--format=csv', '--pipe', '2>/dev/null'])
       for update_line in updates.splitlines() :
         update = update_line.rstrip().split(',')
