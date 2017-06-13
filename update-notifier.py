@@ -54,6 +54,10 @@ class DrupalDocker(BaseApp):
     output = self._run_ssh(['sudo', 'docker', 'ps', '--format "{{.ID}} {{.Names}}"', '-f label=ca.unb.lib.generator=drupal8']);
     for line in output.splitlines() :
       cols = line.split()
+      host = cols[1]
+      if host.startswith('k8s_') :
+        match = re.match('^k8s_([^.]+).*_(dev|prod)_', host)
+        host = match.group(1) + ' (' + match.group(2) + ')'
       # Check for newrelic updates
       nr_exists = self._run_ssh(['sudo', 'docker', 'exec', cols[0], 'which', 'newrelic-daemon']).splitlines()[0]
       if nr_exists != '':
@@ -61,12 +65,12 @@ class DrupalDocker(BaseApp):
         nr_ver_string = re.search('\d+.\d+.\d+.\d+', nr_ver_line).group()
         nr_res_code = subprocess.check_output(['curl', '-s', '-o', '/dev/null', '-I', '-w', '%{http_code}', 'https://download.newrelic.com/php_agent/release/newrelic-php5-' + nr_ver_string + '-linux.tar.gz'])
         if nr_res_code == '404':
-          results.append([cols[1], nr_ver_string, '', 'NEWRELIC_PHP_VERSION'])
+          results.append([host, nr_ver_string, '', 'NEWRELIC_PHP_VERSION'])
       updates = self._run_ssh(['sudo', 'docker', 'exec', cols[0], 'drush', 'ups', '--root=/app/html', '--update-backend=drupal', '--format=csv', '--pipe', '2>/dev/null'])
       for update_line in updates.splitlines() :
         update = update_line.rstrip().split(',')
         if len(update) > 1 and not re.match('^Failed', update[0]) and not re.match('^(Unknown|Unable to check status)', update[3]):
-          results.append([cols[1], update[1], update[2], update[0] + ' (' + update[3].replace(' available','') + ')'])
+          results.append([host, update[1], update[2], update[0] + ' (' + update[3].replace(' available','') + ')'])
 
     return results
 
