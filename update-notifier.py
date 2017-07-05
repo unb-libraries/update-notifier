@@ -140,7 +140,7 @@ class UpdateNotifier:
         app = constructor(host, opts)
         results = app.run_command()
 
-        for result in results :
+        for result in sorted(results, key=lambda x: x[0]) :
           row = [host, app_type] + result
           table.add_row(row)
     return table
