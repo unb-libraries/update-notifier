@@ -35,15 +35,10 @@ class Npm(BaseApp):
   def run_command(self):
     results = []
     for path in self.options['paths'] :
-      output = self._run_ssh(['cd', path, '&&', 'npm', 'outdated', '--depth=0', '--parseable'])
-      for line in output.splitlines() :
-        versions = line.split(':')
-        old = versions[-2].split('@')
-        new = versions[-3].split('@')
-        if old == new : # A new version of the module exists, but we have the version we want
-          continue
-        module = versions[0].split('/').pop()
-        results.append([path, old[1], new[1], module])
+      output = self._run_ssh(['cd', path, '&&', 'npm', 'outdated', '--depth=0', '--json', '||true'])
+      updates = json.loads(output)
+      for module in sorted(updates) :
+        results.append([path, updates[module]['current'], updates[module]['wanted'], module])
     return results
 
 class DrupalDocker(BaseApp):
