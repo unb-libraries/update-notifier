@@ -36,9 +36,10 @@ class Npm(BaseApp):
     results = []
     for path in self.options['paths'] :
       output = self._run_ssh(['cd', path, '&&', 'npm', 'outdated', '--depth=0', '--json', '||true'])
-      updates = json.loads(output)
-      for module in sorted(updates) :
-        results.append([path, updates[module]['current'], updates[module]['wanted'], module])
+      if output != '' :
+        updates = json.loads(output)
+        for module in sorted(updates) :
+          results.append([path, updates[module]['current'], updates[module]['wanted'], module])
     return results
 
 class DrupalDocker(BaseApp):
