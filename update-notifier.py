@@ -54,7 +54,9 @@ class DrupalDocker(BaseApp):
       if host.startswith('k8s_') :
         match = re.match('^k8s_([^.]+).*_(dev|prod)_', host)
         host = match.group(1) + ' (' + match.group(2) + ')'
-      updates = self._run_ssh(['sudo', 'docker', 'exec', cols[0], 'drush', 'ups', '--root=/app/html', '--update-backend=drupal', '--format=csv', '--pipe', '2>/dev/null'])
+      run_opts = ['sudo', 'docker', 'exec', cols[0], 'drush', '--root=/app/html', '--update-backend=drupal']
+      self._run_ssh(run_opts + ['rf', '2>/dev/null'])
+      updates = self._run_ssh(run_opts + ['ups', '--format=csv', '--pipe', '2>/dev/null'])
       for update_line in updates.splitlines() :
         update = update_line.rstrip().split(',')
         if len(update) > 1 and not re.match('^Failed', update[0]) and not re.match('^(Unknown|Unable to check status)', update[3]):
@@ -70,6 +72,7 @@ class Drupal(BaseApp):
       run_opts = ['drush', '--root=' + '/var/www/' + site + '/htdocs/', '--uri=http://default']
       clear_cache = ['cache-rebuild'] if self.options.get(site,{}).get('version', '') == '8' else ['cc', 'all'];
       self._run_ssh(run_opts + clear_cache + ['--pipe', '2>/dev/null'])
+      self._run_ssh(run_opts + ['rf', '2>/dev/null'])
       output = self._run_ssh(run_opts + ['ups', '--update-backend=drupal', '--format=csv', '--pipe', '2>/dev/null'])
       for line in output.splitlines() :
         update = line.rstrip().split(',')
