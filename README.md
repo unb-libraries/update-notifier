@@ -4,8 +4,9 @@ Checks servers across the network updates and sends available updates in a forma
 ## Services supported
 + Apt
 + Composer
-+ Drupal
++ Drupal (+Docker)
 + Npm
++ Pip (+Docker)
 
 
 ## Dependencies

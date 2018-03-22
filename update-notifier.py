@@ -93,6 +93,23 @@ class Composer(BaseApp):
           results.append([path, match.group(2), match.group(4), match.group(1)])
     return results
 
+class PipDocker(BaseApp):
+
+  def run_command(self):
+    results = []
+
+    for container in self.options['containers'] :
+      output = self._run_ssh(['sudo', 'docker', 'ps', '--format "{{.ID}} {{.Names}}"', '-f label=io.kubernetes.container.name=' + container]);
+      for line in output.splitlines() :
+        cols = line.split()
+        updates = self._run_ssh(['sudo', 'docker', 'exec', cols[0], 'pur', '-o', '/dev/null'])
+        for update in updates.splitlines() :
+          match = re.match('Updated ([^:]+): ([^\s]+) -> ([^\s]+)', update)
+          if match :
+            results.append([container, match.group(2), match.group(3), match.group(1)])
+
+    return results
+
 class Pip(BaseApp):
 
   def run_command(self):
