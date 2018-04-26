@@ -52,8 +52,9 @@ class DrupalDocker(BaseApp):
       cols = line.split()
       host = cols[1]
       if host.startswith('k8s_') :
-        match = re.match('^k8s_([^.]+).*_(dev|prod)_', host)
+        match = re.match('^k8s_([^_]+).*_(dev|prod)_', host)
         host = match.group(1) + ' (' + match.group(2) + ')'
+        host = host.replace('-', '.')
       run_opts = ['sudo', 'docker', 'exec', cols[0], 'drush', '--root=/app/html', '--update-backend=drupal']
       self._run_ssh(run_opts + ['rf', '2>/dev/null'])
       updates = self._run_ssh(run_opts + ['ups', '--format=csv', '--pipe', '2>/dev/null'])
