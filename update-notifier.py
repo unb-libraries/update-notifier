@@ -53,15 +53,16 @@ class DrupalDocker(BaseApp):
       host = cols[1]
       if host.startswith('k8s_') :
         match = re.match('^k8s_([^_]+).*_(dev|prod)_', host)
-        host = match.group(1) + ' (' + match.group(2) + ')'
-        host = host.replace('-', '.')
+        site = match.group(1).replace('-', '.')
+        host = site + ' (' + match.group(2) + ')'
       run_opts = ['sudo', 'docker', 'exec', cols[0], 'drush', '--root=/app/html', '--update-backend=drupal']
       self._run_ssh(run_opts + ['rf', '2>/dev/null'])
       updates = self._run_ssh(run_opts + ['ups', '--format=csv', '--pipe', '2>/dev/null'])
       for update_line in updates.splitlines() :
         update = update_line.rstrip().split(',')
         if len(update) > 1 and not re.match('^Failed', update[0]) and not re.match('^(Unknown|Unable to check status)', update[3]):
-          results.append([host, update[1], update[2], update[0] + ' (' + update[3].replace(' available','') + ')'])
+          if not update[0] in self.options.get(site, {}).get('ignore', []):
+            results.append([host, update[1], update[2], update[0] + ' (' + update[3].replace(' available','') + ')'])
 
     return results
 
