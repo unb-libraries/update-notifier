@@ -57,7 +57,7 @@ class DrupalDocker(BaseApp):
         host = site + ' (' + match.group(2) + ')'
 
       run_opts = ['sudo', 'docker', 'exec', cols[0], '/scripts/listDrupalUpdates.sh']
-      if datetime.datetime.today().weekday() != 6:
+      if datetime.datetime.today().weekday() != 0:
         run_opts += ['-s']
       out = self._run_ssh(run_opts + ['2>/dev/null'])
       if out != '' :
