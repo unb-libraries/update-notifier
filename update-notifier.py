@@ -63,7 +63,8 @@ class DrupalDocker(BaseApp):
       if out != '' :
         updates = json.loads(out)
         for module in updates:
-          results.append([host, module['existing_version'], module['recommended'], module['name'] + ' (' + module['status'].replace(' available','') + ')'])
+          if not module['name'] in self.options.get(site, {}).get('ignore', []):
+            results.append([host, module['existing_version'], module['recommended'], module['name'] + ' (' + module['status'].replace(' available','') + ')'])
 
     return results
 
