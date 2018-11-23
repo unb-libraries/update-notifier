@@ -25,6 +25,9 @@ class Apt(BaseApp):
       return []
 
     updates = output.split(';')
+    if datetime.datetime.today().weekday() != 0 and updates[1] == '0':
+      return []
+
     result = ['', '', updates[0], '']
     if updates[1] != '0' :
       result[-1] = updates[1] + ' security updates'
