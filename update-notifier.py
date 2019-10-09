@@ -55,6 +55,7 @@ class DrupalDocker(BaseApp):
     results = []
 
     output = self._run_ssh(['sudo', 'docker', 'ps', '--format "{{.ID}} {{.Names}}"', '-f label=ca.unb.lib.generator=drupal8']);
+    seen = {}
     for line in output.splitlines() :
       cols = line.split()
       host = cols[1]
@@ -62,6 +63,10 @@ class DrupalDocker(BaseApp):
         match = re.match('^k8s_([^_]+).*_(dev|prod)_', host)
         site = match.group(1).replace('-', '.')
         host = site + ' (' + match.group(2) + ')'
+
+      if host in seen:
+        continue
+      seen[host] = 1
 
       run_opts = ['sudo', 'docker', 'exec', cols[0], '/scripts/listDrupalUpdates.sh']
       if datetime.datetime.today().weekday() != 0:
