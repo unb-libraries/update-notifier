@@ -24,18 +24,21 @@ class BaseApp:
 class Apt(BaseApp):
 
   def run_command(self):
+    results = []
     output = self._run_ssh(['/usr/lib/update-notifier/apt-check', '2>&1'])
-    if output == '0;0' :
-      return []
+    if output != '0;0' :
+      updates = output.split(';')
+      if datetime.datetime.today().weekday() == 0 or updates[1] != '0' :
+        result = ['', '', updates[0], '']
+        if updates[1] != '0' :
+          result[-1] = updates[1] + ' security updates'
+          results.append(result)
 
-    updates = output.split(';')
-    if datetime.datetime.today().weekday() != 0 and updates[1] == '0':
-      return []
+    output = self._run_ssh(['[ -e "/var/run/reboot-required" ] && echo 1 || echo 0'])
+    if output[0] == '1' :
+      results.append(['', '', '', 'Reboot Required'])
 
-    result = ['', '', updates[0], '']
-    if updates[1] != '0' :
-      result[-1] = updates[1] + ' security updates'
-    return [result]
+    return results
 
 class Npm(BaseApp):
 
