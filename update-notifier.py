@@ -100,6 +100,21 @@ class Drupal(BaseApp):
             results.append([site, update[1], update[2], update[0] + ' (' + update[3].replace(' available','') + ')'])
     return results
 
+class ComposerDocker(BaseApp):
+
+  def run_command(self):
+    results = []
+    for container in self.options['containers'] :
+      output = self._run_ssh(['sudo', 'docker', 'ps', '--format "{{.ID}} {{.Names}}"', '-f label=io.kubernetes.container.name=' + container]);
+      for line in output.splitlines() :
+        cols = line.split()
+        output = self._run_ssh(['sudo', 'docker', 'exec', cols[0], 'composer', '--no-ansi', 'update', '--dry-run', '2>&1'])
+        for line in output.splitlines() :
+          match = re.match('^\s+- Updating ([^\s]+) \(([^\)]+)\) to ([^\s]+) \(([^\)]+)\)', line)
+          if match :
+            results.append([container, match.group(2), match.group(4), match.group(1)])
+    return results
+
 class Composer(BaseApp):
 
   def run_command(self):
