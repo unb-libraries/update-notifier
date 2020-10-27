@@ -120,7 +120,7 @@ class Composer(BaseApp):
   def run_command(self):
     results = []
     for path in self.options['paths'] :
-      output = self._run_ssh(['composer.phar', '--no-ansi', '--working-dir=' + path, 'update', '--dry-run', '2>&1'])
+      output = self._run_ssh(['composer', '--no-ansi', '--working-dir=' + path, 'update', '--dry-run', '2>&1'])
       for line in output.splitlines() :
         match = re.match('^\s+- Updating ([^\s]+) \(([^\)]+)\) to ([^\s]+) \(([^\)]+)\)', line)
         if match :
