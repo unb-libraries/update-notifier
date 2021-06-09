@@ -64,6 +64,8 @@ class DrupalDocker(BaseApp):
       host = cols[1]
       if host.startswith('k8s_') :
         match = re.match('^k8s_([^_]+).*_(dev|prod)_', host)
+        if match == None:
+          continue
         site = match.group(1).replace('-', '.')
         host = site + ' (' + match.group(2) + ')'
 
