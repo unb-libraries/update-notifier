@@ -57,7 +57,12 @@ class DrupalDocker(BaseApp):
   def run_command(self):
     results = []
 
-    output = self._run_ssh(['sudo', 'docker', 'ps', '--format "{{.ID}} {{.Names}}"', '-f label=ca.unb.lib.generator=drupal8']);
+    labels = ['drupal8']
+    if 'labels' in self.options:
+      labels = self.options['labels']
+    output = '';
+    for label in labels:
+      output += self._run_ssh(['sudo', 'docker', 'ps', '--format "{{.ID}} {{.Names}}"', '-f label=ca.unb.lib.generator=' + label]);
     seen = {}
     for line in output.splitlines() :
       cols = line.split()
