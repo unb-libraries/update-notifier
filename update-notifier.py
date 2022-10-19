@@ -72,6 +72,8 @@ class DrupalDocker(BaseApp):
         if match == None:
           continue
         site = match.group(1).replace('-', '.')
+        if site.startswith('cron.'):
+          continue
         host = site + ' (' + match.group(2) + ')'
 
       if host in seen:
