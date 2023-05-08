@@ -15,9 +15,9 @@ class BaseApp:
   def _run_ssh(self, args):
     ssh = ['ssh', self.host] + args
     try:
-      output = subprocess.check_output(ssh)
+      output = subprocess.check_output(ssh, encoding='utf8')
     except subprocess.CalledProcessError as e:
-      print "ERROR during " + ' '.join(ssh)
+      print("ERROR during " + ' '.join(ssh))
       output = ''
     return output
 
@@ -215,7 +215,7 @@ def main():
   table = notifier.get_updates(hosts=options.host, types=options.type)
 
   if options.print_only:
-    print table
+    print(table)
   else:
     notifier.send_sns(table)
 
