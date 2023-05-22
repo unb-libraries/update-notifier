@@ -26,7 +26,9 @@ class Apt(BaseApp):
   def run_command(self):
     results = []
     output = self._run_ssh(['/usr/lib/update-notifier/apt-check', '2>&1'])
-    if output != '0;0' :
+    if output == '':
+      results.append(['', '', '', 'Apt Check Failed'])
+    elif output != '0;0' :
       updates = output.split(';')
       if datetime.datetime.today().weekday() == 0 or updates[1] != '0' :
         result = ['', '', updates[0], '']
