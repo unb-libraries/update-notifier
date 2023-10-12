@@ -117,15 +117,31 @@ class ComposerDocker(BaseApp):
 
   def run_command(self):
     results = []
-    for container in self.options['containers'] :
-      output = self._run_ssh(['sudo', 'docker', 'ps', '--format "{{.ID}} {{.Names}}"', '-f label=io.kubernetes.container.name=' + container]);
+
+    for app in self.options['apps'] :
+      output = self._run_ssh(['kubectl', 'get', 'pods', '--all-namespaces', '-l app=' + app, '-o wide']);
+
+      first_line = True
       for line in output.splitlines() :
+        if first_line:
+          first_line = False
+          continue
+
         cols = line.split()
-        output = self._run_ssh(['sudo', 'docker', 'exec', cols[0], 'composer', '--no-ansi', 'update', '--dry-run', '2>&1'])
+        namespace = cols[0]
+        pod = cols[1]
+
+        if namespace not in ['dev', 'prod']:
+          continue
+
+        host = re.sub('-[a-z0-9]+-[a-z0-9]+$', '', pod)
+        site = host.replace('-', '.') + ' (' + namespace + ')'
+
+        output = self._run_ssh(['kubectl', 'exec', '--namespace=' + namespace, pod, '--', 'composer', '--no-ansi', 'update', '--dry-run', '2>&1'])
         for line in output.splitlines() :
           match = re.match('^\s+- Updating ([^\s]+) \(([^\)]+)\) to ([^\s]+) \(([^\)]+)\)', line)
           if match :
-            results.append([container, match.group(2), match.group(4), match.group(1)])
+            results.append([site, match.group(2), match.group(4), match.group(1)])
     return results
 
 class Composer(BaseApp):
