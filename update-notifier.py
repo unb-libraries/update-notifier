@@ -59,30 +59,31 @@ class DrupalDocker(BaseApp):
   def run_command(self):
     results = []
 
-    labels = ['drupal8']
-    if 'labels' in self.options:
-      labels = self.options['labels']
-    output = '';
-    for label in labels:
-      output += self._run_ssh(['sudo', 'docker', 'ps', '--format "{{.ID}} {{.Names}}"', '-f label=ca.unb.lib.generator=' + label]);
+    output = self._run_ssh(['kubectl', 'get', 'pods', '--all-namespaces', '-l app=drupal,appMajor=9', '-o wide']);
+
     seen = {}
+    first_line = True
     for line in output.splitlines() :
+      if first_line:
+        first_line = False
+        continue
+
       cols = line.split()
-      host = cols[1]
-      if host.startswith('k8s_') :
-        match = re.match('^k8s_([^_]+).*_(dev|prod)_', host)
-        if match == None:
-          continue
-        site = match.group(1).replace('-', '.')
-        if site.startswith('cron.'):
-          continue
-        host = site + ' (' + match.group(2) + ')'
+      namespace = cols[0]
+      pod = cols[1]
+
+      if namespace not in ['dev', 'prod']:
+        continue
+
+      host = re.sub('-[a-z0-9]+-[a-z0-9]+$', '', pod)
+      site = host.replace('-', '.')
+      host = site + ' (' + namespace + ')'
 
       if host in seen:
         continue
       seen[host] = 1
 
-      run_opts = ['sudo', 'docker', 'exec', cols[0], '/scripts/listDrupalUpdates.sh']
+      run_opts = ['kubectl', 'exec', '--namespace=' + namespace, pod, '--', '/scripts/listDrupalUpdates.sh']
       if datetime.datetime.today().weekday() != 0:
         run_opts += ['-s']
       out = self._run_ssh(run_opts + ['2>/dev/null'])
