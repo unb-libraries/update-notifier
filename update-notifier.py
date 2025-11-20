@@ -119,7 +119,7 @@ class ComposerDocker(BaseApp):
     results = []
 
     for app in self.options['apps'] :
-      output = self._run_ssh(['kubectl', 'get', 'pods', '--all-namespaces', '-l app=' + app, '-o wide']);
+      output = self._run_ssh(['kubectl', 'get', 'pods', '--all-namespaces', '-l app.kubernetes.io/name=' + app, '-o wide']);
 
       first_line = True
       for line in output.splitlines() :
@@ -137,7 +137,13 @@ class ComposerDocker(BaseApp):
         host = re.sub('-[a-z0-9]+-[a-z0-9]+$', '', pod)
         site = host.replace('-', '.') + ' (' + namespace + ')'
 
-        output = self._run_ssh(['kubectl', 'exec', '--namespace=' + namespace, pod, '--', 'composer', '--no-ansi', 'update', '--dry-run', '2>&1'])
+        run_opts = ['kubectl', 'exec', '--namespace=' + namespace, pod, '--', 'composer', '--no-ansi', 'update', '--dry-run']
+        extra_opts = self.options.get('options', {}).get(app, {})
+        for arg, val in extra_opts.items():
+          run_opts.extend(['--' + arg, val])
+
+        run_opts.append('2>&1')
+        output = self._run_ssh(run_opts)
         for line in output.splitlines() :
           match = re.match('^\s+- Updating ([^\s]+) \(([^\)]+)\) to ([^\s]+) \(([^\)]+)\)', line)
           if match :
@@ -167,7 +173,7 @@ class PipDocker(BaseApp):
     results = []
 
     for app in self.options['apps'] :
-      output = self._run_ssh(['kubectl', 'get', 'pods', '--all-namespaces', '-l app=' + app, '-o wide']);
+      output = self._run_ssh(['kubectl', 'get', 'pods', '--all-namespaces', '-l app.kubernetes.io/name=' + app, '-o wide']);
 
       first_line = True
       for line in output.splitlines() :
