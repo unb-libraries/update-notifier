@@ -15,8 +15,13 @@
       "Npm": {
         "paths": [ "/path/to/npm/project" ]
       },
-      "DrupalDocker": {
-        "labels": [ "drupal9" ]
+      "ComposerDocker": {
+        "apps": [ "composer1.example.com" ],
+        "options": {
+          "composer1.example.com": {
+            "working-dir": "/app/home/"
+          }
+        }
       }
     }
   }

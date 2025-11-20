@@ -54,65 +54,6 @@ class Npm(BaseApp):
           results.append([path, updates[module]['current'], updates[module]['wanted'], module])
     return results
 
-class DrupalDocker(BaseApp):
-
-  def run_command(self):
-    results = []
-
-    output = self._run_ssh(['kubectl', 'get', 'pods', '--all-namespaces', '-l app=drupal,appMajor=9', '-o wide']);
-
-    seen = {}
-    first_line = True
-    for line in output.splitlines() :
-      if first_line:
-        first_line = False
-        continue
-
-      cols = line.split()
-      namespace = cols[0]
-      pod = cols[1]
-
-      if namespace not in ['dev', 'prod']:
-        continue
-
-      host = re.sub('-[a-z0-9]+-[a-z0-9]+$', '', pod)
-      site = host.replace('-', '.')
-      host = site + ' (' + namespace + ')'
-
-      if host in seen:
-        continue
-      seen[host] = 1
-
-      run_opts = ['kubectl', 'exec', '--namespace=' + namespace, pod, '--', '/scripts/listDrupalUpdates.sh']
-      if datetime.datetime.today().weekday() != 0:
-        run_opts += ['-s']
-      out = self._run_ssh(run_opts + ['2>/dev/null'])
-      if out != '' :
-        updates = json.loads(out)
-        for module in updates:
-          if not (module['name'] in self.options.get(site, {}).get('ignore', []) or module['recommended'] is None) :
-            status = module['status'].replace(' available', '')
-            results.append([host, module['existing_version'], module['recommended'], module['name'] + ' (' + status + ')'])
-
-    return results
-
-class Drupal(BaseApp):
-
-  def run_command(self):
-    results = []
-    for site in self.options['sites'] :
-      run_opts = ['drush', '--root=' + '/var/www/' + site + '/htdocs/', '--uri=http://default']
-      clear_cache = ['cache-rebuild'] if self.options.get(site,{}).get('version', '') == '8' else ['cc', 'all'];
-      self._run_ssh(run_opts + clear_cache + ['--pipe', '2>/dev/null'])
-      self._run_ssh(run_opts + ['rf', '2>/dev/null'])
-      output = self._run_ssh(run_opts + ['ups', '--update-backend=drupal', '--format=csv', '--pipe', '2>/dev/null'])
-      for line in output.splitlines() :
-        update = line.rstrip().split(',')
-        if len(update) > 1 and not re.match('^Failed', update[0]) and not re.match('^(Unknown|Unable to check status)', update[3]):
-          if not update[0] in self.options.get(site, {}).get('ignore', []):
-            results.append([site, update[1], update[2], update[0] + ' (' + update[3].replace(' available','') + ')'])
-    return results
-
 class ComposerDocker(BaseApp):
 
   def run_command(self):
