@@ -6,22 +6,8 @@
       "Composer": {
         "paths": [ "/path/to/composer/project" ]
       },
-      "Drupal": {
-        "sites": [ "drupal1.example.com", "drupal2.example.com" ],
-        "drupal2.example.com" : {
-          "ignore": [ "zeropoint" ]
-        }
-      },
       "Npm": {
         "paths": [ "/path/to/npm/project" ]
-      },
-      "ComposerDocker": {
-        "apps": [ "composer1.example.com" ],
-        "options": {
-          "composer1.example.com": {
-            "working-dir": "/app/home/"
-          }
-        }
       }
     }
   }

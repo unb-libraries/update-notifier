@@ -54,43 +54,6 @@ class Npm(BaseApp):
           results.append([path, updates[module]['current'], updates[module]['wanted'], module])
     return results
 
-class ComposerDocker(BaseApp):
-
-  def run_command(self):
-    results = []
-
-    for app in self.options['apps'] :
-      output = self._run_ssh(['kubectl', 'get', 'pods', '--all-namespaces', '-l app.kubernetes.io/name=' + app, '-o wide']);
-
-      first_line = True
-      for line in output.splitlines() :
-        if first_line:
-          first_line = False
-          continue
-
-        cols = line.split()
-        namespace = cols[0]
-        pod = cols[1]
-
-        if namespace not in ['dev', 'prod']:
-          continue
-
-        host = re.sub('-[a-z0-9]+-[a-z0-9]+$', '', pod)
-        site = host.replace('-', '.') + ' (' + namespace + ')'
-
-        run_opts = ['kubectl', 'exec', '--namespace=' + namespace, pod, '--', 'composer', '--no-ansi', 'update', '--dry-run']
-        extra_opts = self.options.get('options', {}).get(app, {})
-        for arg, val in extra_opts.items():
-          run_opts.extend(['--' + arg, val])
-
-        run_opts.append('2>&1')
-        output = self._run_ssh(run_opts)
-        for line in output.splitlines() :
-          match = re.match('^\s+- Updating ([^\s]+) \(([^\)]+)\) to ([^\s]+) \(([^\)]+)\)', line)
-          if match :
-            results.append([site, match.group(2), match.group(4), match.group(1)])
-    return results
-
 class Composer(BaseApp):
 
   def run_command(self):
@@ -106,38 +69,6 @@ class Composer(BaseApp):
         match = re.match('^\s+- Upgrading ([^\s]+) \(([^\s]+) => ([^\s]+)\)', line)
         if match :
           results.append([path, match.group(2), match.group(3), match.group(1)])
-    return results
-
-class PipDocker(BaseApp):
-
-  def run_command(self):
-    results = []
-
-    for app in self.options['apps'] :
-      output = self._run_ssh(['kubectl', 'get', 'pods', '--all-namespaces', '-l app.kubernetes.io/name=' + app, '-o wide']);
-
-      first_line = True
-      for line in output.splitlines() :
-        if first_line:
-          first_line = False
-          continue
-
-        cols = line.split()
-        namespace = cols[0]
-        pod = cols[1]
-
-        if namespace not in ['dev', 'prod']:
-          continue
-
-        host = re.sub('-[a-z0-9]+-[a-z0-9]+$', '', pod)
-        site = host.replace('-', '.') + ' (' + namespace + ')'
-
-        updates = self._run_ssh(['kubectl', 'exec', '--namespace=' + namespace, pod, '--', 'pur', '-o /dev/null'])
-        for update in updates.splitlines() :
-          match = re.match('Updated ([^:]+): ([^\s]+) -> ([^\s]+)', update)
-          if match :
-            results.append([site, match.group(2), match.group(3), match.group(1)])
-
     return results
 
 class Pip(BaseApp):
