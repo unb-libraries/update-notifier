@@ -1,0 +1,23 @@
+#!/usr/bin/env php
+<?php
+
+/**
+ * @file
+ * Update Notifier command runner.
+ */
+
+require_once __DIR__.'/../vendor/autoload.php';
+
+use Robo\Robo;
+
+$discovery = new \Consolidation\AnnotatedCommand\CommandFileDiscovery();
+$discovery->setSearchPattern('*Command.php');
+$coreClasses = $discovery->discover(__DIR__.'/../src/UpdateNotifier/Robo', 'UNBLibraries\UpdateNotifier\Robo');
+
+$statusCode = Robo::run(
+  $_SERVER['argv'],
+  $coreClasses,
+  'UpdateNotifier',
+  '1.0.0'
+);
+exit($statusCode);

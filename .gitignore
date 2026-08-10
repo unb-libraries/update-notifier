@@ -1,1 +1,2 @@
-config.json
+/vendor/
+/update-notifier.yml

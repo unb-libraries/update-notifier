@@ -1,12 +1,20 @@
-# Central update notification service
-Checks servers across the network updates and sends available updates in a formatted ASCII table to a Amazon SNS topic.
+# UNB Libraries Update Notifier
 
-## Services supported
-+ Apt
-+ Composer
-+ Npm
-+ Pip
+Checks a list of servers over SSH for available `apt` updates and reports them to an Amazon SNS topic.
 
+## Installation
 
-## Dependencies
-+   PrettyTable > 0.6
+```
+composer install
+```
+
+Copy `update-notifier.yml.sample` to `update-notifier.yml` and fill in the server list and SNS
+credentials/topic ARN. The account running this needs passwordless SSH access to every listed server.
+
+## Commands
+
+Use `./bin/update-notifier list` for a full list of commands.
+
+ * `apt:check` - check all configured servers for apt updates and send the results to SNS
+   * `--print` - print the results instead of sending them to SNS
+   * `--host` - limit the check to this host (repeatable)
