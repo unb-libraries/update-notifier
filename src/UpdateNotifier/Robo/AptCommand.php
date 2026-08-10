@@ -4,6 +4,7 @@ namespace UNBLibraries\UpdateNotifier\Robo;
 
 use Symfony\Component\Console\Helper\Table;
 use Symfony\Component\Console\Output\BufferedOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class AptCommand extends Command
 {
@@ -48,12 +49,16 @@ class AptCommand extends Command
         $rows = [];
         foreach ($servers as $host) {
             if ($hostFilter && !in_array($host, $hostFilter, true)) {
+                $this->debug("Skipping {$host}: not in --host filter");
                 continue;
             }
+            $this->debug("Checking {$host}");
             $row = $this->checkHost($host);
-            if ($row !== null) {
-                $rows[] = [$host, ...$row];
+            if ($row === null) {
+                $this->debug("Nothing to report for {$host}");
+                continue;
             }
+            $rows[] = [$host, ...$row];
         }
 
         return $rows;
@@ -68,6 +73,7 @@ class AptCommand extends Command
         $notes = [];
 
         $output = trim($this->sshExec($host, self::APT_CHECK_BIN . ' 2>&1'));
+        $this->debug("apt-check output for {$host}: " . ($output === '' ? '(empty)' : $output));
         if ($output === '') {
             $notes[] = 'Apt check failed';
         } elseif ($output !== '0;0') {
@@ -82,6 +88,7 @@ class AptCommand extends Command
             $host,
             sprintf('[ -e "%s" ] && echo 1 || echo 0', self::REBOOT_REQUIRED_FILE)
         );
+        $this->debug("reboot-required check for {$host}: " . trim($rebootRequired));
         if (trim($rebootRequired) === '1') {
             $notes[] = 'Reboot required';
         }
@@ -102,6 +109,11 @@ class AptCommand extends Command
             ->run();
 
         return (string) $result->getMessage();
+    }
+
+    private function debug(string $message): void
+    {
+        $this->output()->writeln("<comment>{$message}</comment>", OutputInterface::VERBOSITY_VERBOSE);
     }
 
   /**
