@@ -38,7 +38,7 @@ class AptCommand extends Command
 
   /**
    * @phpstan-param string[] $hostFilter
-   * @phpstan-return array<int, array{0: string, 1: string}>
+   * @phpstan-return array<int, array{0: string, 1: string, 2: string}>
    */
     private function getUpdateRows(array $hostFilter): array
     {
@@ -50,8 +50,9 @@ class AptCommand extends Command
             if ($hostFilter && !in_array($host, $hostFilter, true)) {
                 continue;
             }
-            foreach ($this->checkHost($host) as $note) {
-                $rows[] = [$host, $note];
+            $row = $this->checkHost($host);
+            if ($row !== null) {
+                $rows[] = [$host, ...$row];
             }
         }
 
@@ -59,10 +60,11 @@ class AptCommand extends Command
     }
 
   /**
-   * @phpstan-return string[]
+   * @phpstan-return array{0: string, 1: string}|null
    */
-    private function checkHost(string $host): array
+    private function checkHost(string $host): ?array
     {
+        $updates = '';
         $notes = [];
 
         $output = trim($this->sshExec($host, self::APT_CHECK_BIN . ' 2>&1'));
@@ -70,10 +72,9 @@ class AptCommand extends Command
             $notes[] = 'Apt check failed';
         } elseif ($output !== '0;0') {
             [$total, $security] = array_pad(explode(';', $output, 2), 2, '0');
+            $updates = $total;
             if ($security !== '0') {
                 $notes[] = "{$security} security updates";
-            } elseif ($this->isMonday()) {
-                $notes[] = "{$total} updates";
             }
         }
 
@@ -85,7 +86,11 @@ class AptCommand extends Command
             $notes[] = 'Reboot required';
         }
 
-        return $notes;
+        if ($updates === '' && !$notes) {
+            return null;
+        }
+
+        return [$updates, implode(', ', $notes)];
     }
 
     private function sshExec(string $host, string $command): string
@@ -99,13 +104,8 @@ class AptCommand extends Command
         return (string) $result->getMessage();
     }
 
-    private function isMonday(): bool
-    {
-        return (int) date('N') === 1;
-    }
-
   /**
-   * @phpstan-param array<int, array{0: string, 1: string}> $rows
+   * @phpstan-param array<int, array{0: string, 1: string, 2: string}> $rows
    */
     private function printRows(array $rows): void
     {
@@ -115,19 +115,19 @@ class AptCommand extends Command
         }
 
         $table = new Table($this->output());
-        $table->setHeaders(['Hostname', 'Note']);
+        $table->setHeaders(['Hostname', 'Updates', 'Note']);
         $table->setRows($rows);
         $table->render();
     }
 
   /**
-   * @phpstan-param array<int, array{0: string, 1: string}> $rows
+   * @phpstan-param array<int, array{0: string, 1: string, 2: string}> $rows
    */
     private function formatRows(array $rows): string
     {
         $output = new BufferedOutput();
         $table = new Table($output);
-        $table->setHeaders(['Hostname', 'Note']);
+        $table->setHeaders(['Hostname', 'Updates', 'Note']);
         $table->setRows($rows);
         $table->render();
 
