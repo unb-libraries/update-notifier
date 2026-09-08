@@ -3,7 +3,7 @@
   "description": "Checks servers for available apt updates and reports them to Amazon SNS",
   "require": {
     "php": "^8.1",
-    "aws/aws-sdk-php": "^3.47",
+    "aws/aws-sdk-php": "~3.394.0",
     "consolidation/robo": "^5",
     "cweagans/composer-patches": "~1.0"
   },
