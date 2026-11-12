@@ -68,6 +68,11 @@ class AptCommandTest extends TestCase
             'apt-check gave no output' => ['', "0\n", ['', 'Apt check failed']],
             'apt-check failed, reboot required' => ['', "1\n", ['', 'Apt check failed, Reboot required']],
             'reboot check output not exactly 1' => ["0;0\n", "yes\n", null],
+            'apt-check error' => ["E: some apt error\n", "0\n", ['', 'Apt check failed']],
+            'apt-check error, reboot required' => ["E: some apt error\n", "1\n", ['', 'Apt check failed, Reboot required']],
+            'counts after a warning' => ["W: some apt warning\n5;2\n", "0\n", ['5', '2 security updates']],
+            'up to date after a warning' => ["W: some apt warning\n0;0\n", "0\n", null],
+            'counts not on a line of their own' => ["E: expected 1;2 got 3\n", "0\n", ['', 'Apt check failed']],
         ];
     }
 
@@ -78,17 +83,6 @@ class AptCommandTest extends TestCase
     public function testHostResult(string $apt, string $reboot, ?array $expected): void
     {
         $this->assertSame($expected, $this->hostRow($apt, $reboot));
-    }
-
-    public function testNonNumericAptCheckOutputIsReportedVerbatimAsTheUpdateCount(): void
-    {
-        // Documents current behaviour: apt-check's output is read with 2>&1, so an error
-        // message (rather than "N;M") lands in the Updates column instead of being reported
-        // as "Apt check failed".
-        $this->assertSame(
-            ['E: some apt error', ''],
-            $this->hostRow("E: some apt error\n", "0\n")
-        );
     }
 
     public function testRunsAptCheckAndRebootCheckOverSsh(): void

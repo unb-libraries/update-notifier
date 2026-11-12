@@ -74,13 +74,15 @@ class AptCommand extends Command
 
         $output = trim($this->sshExec($host, self::APT_CHECK_BIN . ' 2>&1'));
         $this->debug("apt-check output for {$host}: " . ($output === '' ? '(empty)' : $output));
-        if ($output === '') {
+        // apt-check reports "<total>;<security>" on stderr, so with 2>&1 any
+        // warnings or errors are mixed in; only that line counts, and without
+        // it the check failed.
+        if (!preg_match('/^(\d+);(\d+)$/m', $output, $counts)) {
             $notes[] = 'Apt check failed';
-        } elseif ($output !== '0;0') {
-            [$total, $security] = array_pad(explode(';', $output, 2), 2, '0');
-            $updates = $total;
-            if ($security !== '0') {
-                $notes[] = "{$security} security updates";
+        } elseif ($counts[1] !== '0') {
+            $updates = $counts[1];
+            if ($counts[2] !== '0') {
+                $notes[] = "{$counts[2]} security updates";
             }
         }
 
