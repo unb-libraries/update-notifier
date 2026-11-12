@@ -100,7 +100,7 @@ class AptCommand extends Command
         return [$updates, implode(', ', $notes)];
     }
 
-    private function sshExec(string $host, string $command): string
+    protected function sshExec(string $host, string $command): string
     {
         $result = $this->taskSshExec($host)
             ->exec($command)

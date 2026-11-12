@@ -12,6 +12,11 @@
       "UNBLibraries\\": "src/"
     }
   },
+  "autoload-dev": {
+    "psr-4": {
+      "UNBLibraries\\Tests\\UpdateNotifier\\": "tests/"
+    }
+  },
   "bin": [
     "bin/update-notifier"
   ],
@@ -35,6 +40,10 @@
   },
   "require-dev": {
     "phpstan/phpstan": "^1",
-    "squizlabs/php_codesniffer": "^3"
+    "squizlabs/php_codesniffer": "^3",
+    "phpunit/phpunit": "^12"
+  },
+  "scripts": {
+    "test": "phpunit"
   }
 }
