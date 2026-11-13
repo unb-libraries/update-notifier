@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<ruleset name="update-notifier">
+    <description>Update Notifier coding standard</description>
+
+    <file>src</file>
+
+    <arg name="basepath" value="."/>
+    <arg name="colors"/>
+    <arg value="p"/>
+
+    <rule ref="PSR12"/>
+</ruleset>
