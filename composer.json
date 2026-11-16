@@ -2,7 +2,7 @@
   "name": "unb-libraries/update-notifier",
   "description": "Checks servers for available apt updates and reports them to Amazon SNS",
   "require": {
-    "php": "^8.1",
+    "php": "^8.4",
     "aws/aws-sdk-php": "~3.394.0",
     "consolidation/robo": "^5"
   },
@@ -25,6 +25,11 @@
       "email": "libsupport@unb.ca"
     }
   ],
+  "config": {
+    "platform": {
+      "php": "8.4.1"
+    }
+  },
   "require-dev": {
     "phpstan/phpstan": "^1",
     "squizlabs/php_codesniffer": "^3",
