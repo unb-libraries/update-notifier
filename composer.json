@@ -36,6 +36,21 @@
     "phpunit/phpunit": "^12"
   },
   "scripts": {
-    "test": "phpunit"
+    "test": "phpunit",
+    "lint": "phpcs",
+    "fix": "phpcbf",
+    "analyse": "phpstan analyse",
+    "check": [
+      "@lint",
+      "@analyse",
+      "@test"
+    ]
+  },
+  "scripts-descriptions": {
+    "test": "Run the PHPUnit test suite",
+    "lint": "Check coding standards (PSR-12, phpcs.xml)",
+    "fix": "Fix coding standard violations that phpcbf can fix automatically",
+    "analyse": "Run PHPStan static analysis (phpstan.neon)",
+    "check": "Run lint, analyse and test; stops at the first failure"
   }
 }
