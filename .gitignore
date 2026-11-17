@@ -1,3 +1,4 @@
 /vendor/
 /update-notifier.yml
 /.phpunit.cache/
+/build/
