@@ -9,11 +9,11 @@
 //   releases/<build number>/  the last KEEP_RELEASES releases
 //   shared/                   files that outlive releases (update-notifier.yml), linked
 //                             into each release by name, replacing anything there
-//   current                   symlink to the live release
-// and /var/opt/update-notifier is a symlink to DEPLOY_DIR/current, which cron runs.
+//   current                   symlink to the live release; cron (thunderflare-etc-files,
+//                             cron.d/update-notifier) runs current/bin/update-notifier
 //
 // Roll back by pointing current at an earlier release, on the server as mrrobot:
-//   cd /var/opt/update-notifier-deploy && ln -sfn releases/<N> current.new && mv -T current.new current
+//   cd /var/opt/update-notifier && ln -sfn releases/<N> current.new && mv -T current.new current
 
 pipeline {
     agent any
@@ -31,7 +31,7 @@ pipeline {
 
     environment {
         DEPLOY_HOST = 'thunderflare.hil.unb.ca'
-        DEPLOY_DIR = '/var/opt/update-notifier-deploy'
+        DEPLOY_DIR = '/var/opt/update-notifier'
         KEEP_RELEASES = '5'
     }
 
@@ -98,7 +98,9 @@ ln -sfn "$release" current.new
 mv -T current.new current
 echo "current -> $(readlink current)"
 live=$(basename "$(readlink current)")
-ls releases | sort -n | head -n "-$3" | grep -vx "$live" | sed 's|^|releases/|' | xargs -r rm -rf
+# awk, not grep -v, since grep fails the script when it outputs nothing.
+ls releases | sort -n | head -n "-$3" | awk -v live="$live" '$0 != live { print "releases/" $0 }' \
+    | xargs -r rm -rf
 EOF
                 '''
             }
