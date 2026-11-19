@@ -9,6 +9,6 @@ jobs:
   update:
     uses: unb-libraries/github-workflows/.github/workflows/update-php.yaml@1.x
     with:
-      php-version: '8.4'
+      php-version: '8.5'
     secrets:
       PAT_TOKEN: ${{ secrets.UNBLIBBOT_PAT_TOKEN }}
